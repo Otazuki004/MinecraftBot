@@ -1,94 +1,80 @@
 import random
 import time
-from pymine import MinecraftBot
+from minecraft.networking.connection import Connection
+from minecraft.networking.packets import clientbound, serverbound
 
-# Create the bot instance
-bot = MinecraftBot()
-
-# Server details
-server_ip = 'Voidgamer256.aternos.me'  # Aternos server address
-server_port = 45397  # Server port
-
-# Bot's Minecraft username
+# Bot details
+server_ip = 'Voidgamer256.aternos.me'
+server_port = 45397
 username = 'Imnotagay'
-
-# Allowed user for the &leave command
+password = None  # Leave as None if you are using an offline-mode server
 allowed_user = "OtazukiHS"
 
-# Connect the bot to the Aternos server
-bot.connect(server_ip, port=server_port, username=username)
+# Connect to the Minecraft server
+connection = Connection(server_ip, server_port, username=username, auth_token=password)
 
 # Function to handle the event when the bot joins the server
-@bot.on('join')
-def on_join():
-    # Send the /register and /login commands automatically after joining
+def on_join_game(join_game_packet):
     print("Bot has joined the server. Sending registration and login commands...")
     
-    # 1. Send the first /register command
-    bot.send_chat_message("/register humqn52& humqn52&")
+    # Send the /register and /login commands automatically after joining
+    connection.write_packet(serverbound.play.ChatPacket("/register humqn52& humqn52&"))
+    connection.write_packet(serverbound.play.ChatPacket("/register humqn52&"))
+    connection.write_packet(serverbound.play.ChatPacket("/login humqn52&"))
     
-    # 2. Send the second /register command
-    bot.send_chat_message("/register humqn52&")
+    # Send custom join message
+    connection.write_packet(serverbound.play.ChatPacket("Join: https://t.me/Hyper_Speed0"))
     
-    # 3. Send the /login command
-    bot.send_chat_message("/login humqn52&")
-    
-    # 4. Send custom join message
-    bot.send_chat_message("Join: https://t.me/Hyper_Speed0")
-    
-    # Start moving and jumping randomly to avoid inactivity kick
+    # Start random movement and jumping to prevent inactivity kick
     start_movement()
 
-# Function to move and jump randomly to avoid inactivity
+# Function to move and jump randomly
 def start_movement():
     print("Starting movement to avoid inactivity kick...")
     
     while True:
-        # Randomly choose a movement direction and action
-        movement = random.choice(['forward', 'backward', 'left', 'right'])
+        # Random movement and jumping
+        move = random.choice(['forward', 'backward', 'left', 'right'])
         jump = random.choice([True, False])
         
-        # Move the bot
-        if movement == 'forward':
-            bot.move_forward()
-        elif movement == 'backward':
-            bot.move_backward()
-        elif movement == 'left':
-            bot.move_left()
-        elif movement == 'right':
-            bot.move_right()
+        if move == 'forward':
+            connection.write_packet(serverbound.play.PositionAndLookPacket(position=(1, 0, 0), on_ground=True))
+        elif move == 'backward':
+            connection.write_packet(serverbound.play.PositionAndLookPacket(position=(-1, 0, 0), on_ground=True))
+        elif move == 'left':
+            connection.write_packet(serverbound.play.PositionAndLookPacket(position=(0, 1, 0), on_ground=True))
+        elif move == 'right':
+            connection.write_packet(serverbound.play.PositionAndLookPacket(position=(0, -1, 0), on_ground=True))
         
-        # Optionally jump
         if jump:
-            bot.jump()
+            connection.write_packet(serverbound.play.PositionAndLookPacket(position=(0, 0, 1), on_ground=False))
         
-        # Wait a random time between movements (1 to 5 seconds)
-        time.sleep(random.randint(1, 5))
-        
-        # Stop moving after a short random time (to simulate natural movement)
-        time.sleep(random.uniform(0.5, 1.5))
-        bot.stop()
+        time.sleep(random.randint(1, 5))  # Random delay
 
 # Function to handle chat messages
-@bot.on('chat')
-def handle_chat(sender, message):
-    # Print incoming chat messages (for debugging or logging)
-    print(f"[CHAT] {sender}: {message}")
+def on_chat_message(chat_packet):
+    sender = chat_packet.json_data['with'][0]['text']
+    message = chat_packet.json_data['with'][1]['text']
     
-    # Check if the message is the command '&leave'
     if message == "&leave":
-        # Check if the sender is the allowed user (OtazukiHS)
         if sender == allowed_user:
-            # Send a message to let everyone know the bot is leaving
-            bot.send_chat_message(f"{sender}, I'm leaving the server. Goodbye!")
-            
-            # Disconnect the bot from the server
-            bot.disconnect()
+            connection.write_packet(serverbound.play.ChatPacket(f"{sender}, I'm leaving the server. Goodbye!"))
+            connection.disconnect()
             print("Bot has disconnected from the server.")
         else:
-            # If someone else tries to issue the command, ignore it or send a message
-            bot.send_chat_message(f"Sorry {sender}, only {allowed_user} can tell me to leave!")
+            connection.write_packet(serverbound.play.ChatPacket(f"Sorry {sender}, only {allowed_user} can tell me to leave!"))
             print(f"{sender} tried to make the bot leave, but they are not {allowed_user}.")
 
-# Start the bot's event loop
-bot.start()
+# Register event handlers
+connection.register_packet_listener(on_join_game, clientbound.play.JoinGamePacket)
+connection.register_packet_listener(on_chat_message, clientbound.play.ChatMessagePacket)
+
+# Start the bot's connection
+connection.connect()
+
+# Keep the bot running
+try:
+    while True:
+        connection.network_tick()
+except KeyboardInterrupt:
+    connection.disconnect()
