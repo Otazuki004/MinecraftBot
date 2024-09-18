@@ -7,6 +7,6 @@
     "start": "node main.js"
   },
   "dependencies": {
-    "mineflayer": "^3.0.0"  // Adjust the version as needed
+    "mineflayer": "^3.0.0"
   }
 }
