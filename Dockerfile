@@ -1,11 +1,6 @@
-FROM python
-
+FROM node:16
 WORKDIR /root/Hyper_Speed0
-
+COPY package*.json ./
+RUN npm install
 COPY . .
-
-RUN pip3 install --upgrade pip setuptools
-
-RUN pip3 install minecraft
-
-CMD ["python3","-m","main.py"]
+CMD ["node", "main.js"]
