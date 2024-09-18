@@ -6,6 +6,6 @@ COPY . .
 
 RUN pip3 install --upgrade pip setuptools
 
-RUN pip3 install pymine
+RUN pip3 install pyCraft
 
 CMD ["python3","-m","main.py"]
