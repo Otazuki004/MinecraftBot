@@ -6,6 +6,6 @@ COPY . .
 
 RUN pip3 install --upgrade pip setuptools
 
-RUN pip3 install pyCraft
+RUN pip3 install mcpi
 
 CMD ["python3","-m","main.py"]
