@@ -1,16 +1,18 @@
+import random
+import time
 from pymine import MinecraftBot
 
 # Create the bot instance
 bot = MinecraftBot()
 
-# Replace 'your_server_address' with your Aternos server's IP and port (usually the default is 25565)
-server_ip = 'Voidgamer256.aternos.me'  # Example: 'yourserver.aternos.me'
-server_port = 45397  # Default Minecraft port
+# Server details
+server_ip = 'Voidgamer256.aternos.me'  # Aternos server address
+server_port = 45397  # Server port
 
-# Replace 'YourBotUsername' with the username you want for your bot
+# Bot's Minecraft username
 username = 'Imnotagay'
 
-# Define the username of the person allowed to issue the &leave command
+# Allowed user for the &leave command
 allowed_user = "OtazukiHS"
 
 # Connect the bot to the Aternos server
@@ -25,12 +27,47 @@ def on_join():
     # 1. Send the first /register command
     bot.send_chat_message("/register humqn52& humqn52&")
     
-    # 2. Send the second /register command (just in case)
+    # 2. Send the second /register command
     bot.send_chat_message("/register humqn52&")
     
     # 3. Send the /login command
     bot.send_chat_message("/login humqn52&")
+    
+    # 4. Send custom join message
     bot.send_chat_message("Join: https://t.me/Hyper_Speed0")
+    
+    # Start moving and jumping randomly to avoid inactivity kick
+    start_movement()
+
+# Function to move and jump randomly to avoid inactivity
+def start_movement():
+    print("Starting movement to avoid inactivity kick...")
+    
+    while True:
+        # Randomly choose a movement direction and action
+        movement = random.choice(['forward', 'backward', 'left', 'right'])
+        jump = random.choice([True, False])
+        
+        # Move the bot
+        if movement == 'forward':
+            bot.move_forward()
+        elif movement == 'backward':
+            bot.move_backward()
+        elif movement == 'left':
+            bot.move_left()
+        elif movement == 'right':
+            bot.move_right()
+        
+        # Optionally jump
+        if jump:
+            bot.jump()
+        
+        # Wait a random time between movements (1 to 5 seconds)
+        time.sleep(random.randint(1, 5))
+        
+        # Stop moving after a short random time (to simulate natural movement)
+        time.sleep(random.uniform(0.5, 1.5))
+        bot.stop()
 
 # Function to handle chat messages
 @bot.on('chat')
@@ -55,5 +92,3 @@ def handle_chat(sender, message):
 
 # Start the bot's event loop
 bot.start()
-
-# A chat-gpt made code
