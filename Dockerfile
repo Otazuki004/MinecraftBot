@@ -6,6 +6,6 @@ COPY . .
 
 RUN pip3 install --upgrade pip setuptools
 
-RUN pip3 install minecraft-protocol
+RUN pip3 install minecraft
 
 CMD ["python3","-m","main.py"]
